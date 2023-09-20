@@ -1,0 +1,71 @@
+DATA:
+  batch_size: 100
+  image_size: 224
+  num_workers: 4
+  num_classes: 1000
+  num_images: 1000
+
+  mean: !!python/tuple [ 0.0, 0.0, 0.0 ]
+  std: !!python/tuple [ 1.0, 1.0, 1.0 ]
+
+ADV:
+  seed: 1
+  eps: 16
+  alpha: 1.6
+  iters: 10
+  max_value: 1.
+  min_value: 0.
+
+  # Hyper parameters
+  MI:
+    decay: 1.0
+  DI:
+    decay: 1.0
+    resize_rate: 0.9
+    diversity_prob: 0.5
+  PI:
+    amplification: 10.0
+    kern_size: 3
+  TI:
+    decay: 1.0
+    len_kernel: 7
+    nsig: 3
+    resize_rate: 0.9
+    diversity_prob: 0.5
+  NI:
+    decay: 1.0
+  SINI:
+    decay: 1.0
+    m: 5
+  VMI:
+    N: 20
+    beta: 1.5
+  VNI:
+    N: 20
+    beta: 1.5
+  Admix:
+    m_1: 5
+    m_2: 3
+    eta: 0.2
+    decay: 1.0
+  SD:
+    decay: 1.0
+  KD:
+    teacher_name: 'resnet18'
+#    teacher_name: 'resnet50'
+#    teacher_name: 'incv3'
+    T: 1.
+    beta: 0.5
+    decay: 1.
+    start_kd: 1
+  Deep:
+    beta: 100.
+    decay: 1.
+
+PATH:
+  dataset: 'data/'
+  checkpoint: 'checkpoints/'
+  log: 'log'
+
+
+

@@ -1,0 +1,11 @@
+wrn3410:
+  ckp_path: wrn3410_adv/checkpoint.pth
+
+preactresnet18:
+  ckp_path: preactresnet18_adv/checkpoint.pth
+
+vit_s:
+  ckp_path: vit_s_adv/checkpoint
+
+deit_s:
+  ckp_path: deit_s_adv/checkpoint

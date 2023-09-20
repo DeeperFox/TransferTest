@@ -1,0 +1,11 @@
+cache
+cache-downloads
+inspector
+api
+source/inspector.html
+
+.idea/
+checkpoints/
+data/
+
+**/__pycache__
