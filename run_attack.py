@@ -50,6 +50,8 @@ configs = parse_config_file(parse_args())
 
 
 def main():
+    print("hello")
+
     device = torch.device(f'cuda:{configs.gpu_id}')
     # 根据配置的GPU ID设置设备。
     test_loader = get_dataset(configs)
