@@ -1,7 +1,7 @@
 import torchattacks
 
 
-def get_attack(cfg, model, device):
+def get_attack(cfg, model, device,random_image, random_label):
     # Attack
     if cfg.method == 'fgsm':
         attack_method = torchattacks.FGSM(model=model, eps=cfg.ADV.eps)
@@ -55,7 +55,8 @@ def get_attack(cfg, model, device):
         from attack import OURS
         attack_method = OURS.CI_FGSM(model=model, eps=cfg.ADV.eps, alpha=cfg.ADV.alpha, steps=cfg.ADV.iters,
                                          decay=cfg.ADV.DI.decay, resize_rate=cfg.ADV.DI.resize_rate,
-                                         diversity_prob=cfg.ADV.DI.diversity_prob)
+                                         diversity_prob=cfg.ADV.DI.diversity_prob,random_image=random_image,
+                                   random_label=random_label)
     #################################################################
     #                            Test                               #
     #################################################################

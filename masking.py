@@ -21,7 +21,7 @@ def apply_heatmap(cam):
 
 def get_GradCAM(model, images, labels, upsample=None):
     # Ref: https://github.com/jacobgil/pytorch-grad-cam
-
+    images.requires_grad = True  # 确保输入图像需要梯度
     bare_model = model.module if hasattr(model, 'module') else model  # 如果模型是DataParallel，则获取其内部的原始模型
     target_layer = model[-2]  # 获取模型中的目标层
 
@@ -34,6 +34,8 @@ def get_GradCAM(model, images, labels, upsample=None):
     if len(images.shape) == 5:
         images = images.squeeze(1)
     logits = model(images)
+    for param in model.parameters():
+        param.requires_grad = True
     handle.remove()  # 移除钩子
 
     loss = logits.gather(1, labels.unsqueeze(1)).sum()  # 计算损失

@@ -25,16 +25,16 @@ class Context_change:
         self.dataset = dataset  # 设置数据集
         self.cam_masking = get_masking("CAMMasking", model=self.model)  # 获取CAM遮罩方法
 
-    def augment(self, images, labels=None):
+    def augment(self, random_image, random_label,images, labels=None):
         # 对输入图像进行数据增强
         images = images.to(self.device)  # 将图像移到设备上
         labels = labels.to(self.device)  # 将标签移到设备上
         orig_mask = self.cam_masking(images, labels)  # 为原始图像生成CAM遮罩
-        random_idx = torch.randint(0, len(self.dataset), (1,))
-        fill_image, fill_label = self.dataset[random_idx.item()]  # 从数据集中随机获取一个填充图像和其标签
+        fill_image, fill_label = random_image, random_label  # 从数据集中随机获取一个填充图像和其标签
         fill_image = fill_image.unsqueeze(0).to(self.device)  # 增加维度并移至设备上
         fill_label = torch.tensor([fill_label], dtype=torch.long).to(self.device)  # 转换填充标签并移至设备上
         fill_mask = self.cam_masking(fill_image, fill_label)  # 使用其自己的标签为填充图像生成CAM遮罩
+        torch.cuda.empty_cache()
         images = images * orig_mask  # 使用CAM遮罩保留原始图像中的主要主题
         fill_image = fill_image * (~fill_mask)  # 反转填充遮罩以保留背景
         augmented_images = self.masking(images, labels, fill_image)  # 应用遮罩方法

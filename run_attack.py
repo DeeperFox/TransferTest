@@ -47,10 +47,18 @@ def parse_args():
 # 解析配置文件并初始化日志记录。
 configs = parse_config_file(parse_args())
 
+import random
+
+def get_random_image_from_loader(loader):
+    all_samples = list(loader)
+    random_batch = random.choice(all_samples)
+    random_index = random.randrange(len(random_batch[0]))
+    random_image = random_batch[0][random_index]
+    random_label = random_batch[1][random_index]
+    return random_image, random_label
 
 
 def main():
-    print("hello")
 
     device = torch.device(f'cuda:{configs.gpu_id}')
     # 根据配置的GPU ID设置设备。
@@ -67,7 +75,9 @@ def main():
         n = label.size(0)
         data, label = data.to(device), label.to(device)
         # 将数据和标签移动到指定设备。
-        attack_method = get_attack(configs, model=models[configs.model], device=device)
+        random_image, random_label = get_random_image_from_loader(test_loader)
+        attack_method = get_attack(configs, model=models[configs.model], device=device, random_image=random_image,
+                                   random_label=random_label)
         # 获取攻击方法。
         adv_exp = attack_method(data, label)
         # 生成对抗样本。
@@ -101,7 +111,8 @@ if __name__ == '__main__':
     main()
     # 执行主函数。
 
-# python run_attack.py --model resnet18 --method ours --dataset sub_imagenet --config ./config/hyper_params_imagenet.yml
+# python run_attack.py --model inc_v3 --method ours --dataset sub_imagenet --config ./config/hyper_params_imagenet.yml
 # conda activate pytorch
 # cd work2/Jiangshan/at/TransferAttack
+# export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb=256"
 
