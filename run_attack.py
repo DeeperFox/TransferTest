@@ -62,22 +62,23 @@ def main():
 
     device = torch.device(f'cuda:{configs.gpu_id}')
     # 根据配置的GPU ID设置设备。
-    test_loader = get_dataset(configs)
+    test_set,test_loader = get_dataset(configs)
     # 获取数据集。
     models, metrix = get_models(configs, device=device)
     # 获取模型和评价指标。
 
     print(f'surrogate model: {configs.model}\tattack method: {configs.method}')
     # 打印使用的替代模型和攻击方法。
-
+    attack_method = get_attack(configs, model=models[configs.model], device=device, dataset=test_set)
     for idx, (data, label) in enumerate(tqdm(test_loader)):
         # 遍历数据加载器中的数据。
         n = label.size(0)
         data, label = data.to(device), label.to(device)
         # 将数据和标签移动到指定设备。
-        random_image, random_label = get_random_image_from_loader(test_loader)
-        attack_method = get_attack(configs, model=models[configs.model], device=device, random_image=random_image,
-                                   random_label=random_label)
+        # random_image, random_label = get_random_image_from_loader(test_loader)
+        # random_image, random_label = random_image.to(device), random_label.to(device)
+        # attack_method = get_attack(configs, model=models[configs.model], device=device, random_image=random_image,
+        #                            random_label=random_label)
         # 获取攻击方法。
         adv_exp = attack_method(data, label)
         # 生成对抗样本。
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     main()
     # 执行主函数。
 
-# python run_attack.py --model inc_v3 --method ours --dataset sub_imagenet --config ./config/hyper_params_imagenet.yml
+# python run_attack.py --model resnet18 --method ours --dataset sub_imagenet --config ./config/hyper_params_imagenet.yml
 # conda activate pytorch
 # cd work2/Jiangshan/at/TransferAttack
 # export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb=256"
