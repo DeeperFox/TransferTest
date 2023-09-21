@@ -42,7 +42,7 @@ def get_GradCAM(model, images, labels, upsample=None):
     grad = torch.autograd.grad(loss, activations[0])[0]  # 计算关于激活值的梯度
 
     act = activations[0].detach()  # 获取激活值
-    print(grad.shape)
+    # print(grad.shape)
     weights = grad.mean(dim=(2,3), keepdim=True)  # 计算每个通道的梯度的平均值
     cam = F.relu((weights * act).sum(dim=1))  # 计算Grad-CAM
 
@@ -83,6 +83,9 @@ class CAMMaskSingleFill(Attack):  # 定义 CAMMaskSingleFill 类，继承 Attack
     def forward(self, images, labels, fill_image=None):  # 定义前向传播方法
         images = images.clone().detach().to(self.device)  # 克隆并转移图像到设备
         labels = labels.clone().detach().to(self.device)  # 克隆并转移标签到设备
+        print(1,images.shape)
+        images = images.squeeze(1) # 移除第一个维度
+        print(2,images.shape)
         cam = self.get_CAM(self.model, images, labels)  # 获取 CAM
         if self.save_mask:  # 如果需要保存遮罩
             cam, patch_cam = cam  # 分解返回的 CAM 和 patch_cam

@@ -23,4 +23,4 @@ def get_dataset(cfg):
     else:
         raise NotImplemented
 
-    return test_loader
+    return test_set,test_loader
