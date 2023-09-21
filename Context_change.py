@@ -10,6 +10,8 @@ from torchvision import datasets, transforms
 from torchvision.utils import save_image  # 用于保存图像的函数
 
 class Context_change:
+    print('')
+
     def __init__(self, model=None, method="CtxMaskSingleFill(0.0001)", prob=0.5, save_mask=False, dataset=None):
         # 如果未提供模型，则使用预训练的ResNet18模型
         if model is None:
