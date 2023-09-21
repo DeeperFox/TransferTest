@@ -37,11 +37,16 @@ class Context_change:
         fill_image = fill_image.unsqueeze(0).to(self.device)  # 增加维度并移至设备上
         fill_label = torch.tensor([fill_label], dtype=torch.long).to(self.device)  # 转换填充标签并移至设备上
         fill_mask = self.cam_masking(fill_image, fill_label)  # 使用其自己的标签为填充图像生成CAM遮罩
-        torch.cuda.empty_cache()
+        # fill_mask=fill_mask.squeeze(1)
+        print(7,fill_mask.shape)
         images = images * orig_mask  # 使用CAM遮罩保留原始图像中的主要主题
         fill_image = fill_image * (~fill_mask)  # 反转填充遮罩以保留背景
+        print(8,images.shape)
+        print(9,fill_image.shape)
         augmented_images = self.masking(images, labels, fill_image)  # 应用遮罩方法
+        print(5,augmented_images.shape)
         augmented_images = augmented_images.squeeze(1)
+        assert augmented_images.dim() == 4, f"Expected 4D tensor but got {augmented_images.dim()}D tensor."
         return augmented_images
 
     def save(self, path):

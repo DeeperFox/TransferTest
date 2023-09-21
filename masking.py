@@ -22,6 +22,7 @@ def apply_heatmap(cam):
 def get_GradCAM(model, images, labels, upsample=None):
     # Ref: https://github.com/jacobgil/pytorch-grad-cam
     images.requires_grad = True  # 确保输入图像需要梯度
+
     bare_model = model.module if hasattr(model, 'module') else model  # 如果模型是DataParallel，则获取其内部的原始模型
     target_layer = model[-2]  # 获取模型中的目标层
 
@@ -33,15 +34,16 @@ def get_GradCAM(model, images, labels, upsample=None):
     handle = target_layer.register_forward_hook(save_activation)  # 注册钩子函数到目标层
     if len(images.shape) == 5:
         images = images.squeeze(1)
+    # images=images[0]
+    print(6,images.shape)
     logits = model(images)
     for param in model.parameters():
         param.requires_grad = True
     handle.remove()  # 移除钩子
 
     loss = logits.gather(1, labels.unsqueeze(1)).sum()  # 计算损失
-    grad = torch.autograd.grad(loss, activations[0])[0]  # 计算关于激活值的梯度
-
-    act = activations[0].detach()  # 获取激活值
+    grad = torch.autograd.grad(loss, activations[0],retain_graph=True)[0] # 计算关于激活值的梯度
+    act = activations[0].clone().detach()  # 获取激活值
     # print(grad.shape)
     weights = grad.mean(dim=(2,3), keepdim=True)  # 计算每个通道的梯度的平均值
     cam = F.relu((weights * act).sum(dim=1))  # 计算Grad-CAM
@@ -84,7 +86,7 @@ class CAMMaskSingleFill(Attack):  # 定义 CAMMaskSingleFill 类，继承 Attack
         images = images.clone().detach().to(self.device)  # 克隆并转移图像到设备
         labels = labels.clone().detach().to(self.device)  # 克隆并转移标签到设备
         print(1,images.shape)
-        images = images.squeeze(1) # 移除第一个维度
+        images = images.squeeze(0) # 移除第一个维度
         print(2,images.shape)
         cam = self.get_CAM(self.model, images, labels)  # 获取 CAM
         if self.save_mask:  # 如果需要保存遮罩

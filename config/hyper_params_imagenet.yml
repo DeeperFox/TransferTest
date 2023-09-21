@@ -1,5 +1,6 @@
 DATA:
-  batch_size: 2
+  batch_size: 1
+
   image_size: 224
   num_workers: 4
   num_classes: 1000

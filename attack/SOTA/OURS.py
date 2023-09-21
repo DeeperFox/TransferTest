@@ -34,18 +34,15 @@ class CI_FGSM(Attack_Base):  # 定义DI_FGSM类并继承Attack_Base
 
         for _ in range(self.iters):  # 迭代指定次数
             adv_images.requires_grad = True  # 设置需要梯度
-            outputs = self.model(self.context_change.augment(adv_images, labels))  # 通过模型获取输出
-            outputs.require_grad=True
-            cost = loss(outputs, labels)  # 计算损失
-            print(cost.grad_fn)
 
-            print("Requires grad for adv_images:", adv_images.requires_grad)
-            grad = torch.autograd.grad(cost, adv_images, retain_graph=False, create_graph=False,allow_unused=True)[0]  # 计算梯度
-            if grad is None:
-                print("Gradient is None!")
-                # 在这里处理或退出
-            else:
-                grad = grad[0]
+            # print(3,adv_images.shape)
+            outputs = self.model(self.context_change.augment(adv_images, labels))  # 通过模型获取输出
+            # print(4, outputs.shape)
+
+            cost = loss(outputs, labels)  # 计算损失
+
+            print(cost.grad_fn)
+            grad = torch.autograd.grad(cost, adv_images, retain_graph=False, create_graph=False)[0]  # 计算梯度
 
             grad = grad / torch.mean(torch.abs(grad), dim=(1, 2, 3), keepdim=True)  # 对梯度进行归一化
             grad = grad + momentum * self.decay  # 更新梯度加上动量衰减
