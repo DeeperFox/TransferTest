@@ -56,6 +56,12 @@ def get_attack(cfg, model, device,dataset):
         attack_method = OURS.CI_FGSM(model=model, eps=cfg.ADV.eps, alpha=cfg.ADV.alpha, steps=cfg.ADV.iters,
                                          decay=cfg.ADV.DI.decay, resize_rate=cfg.ADV.DI.resize_rate,
                                          diversity_prob=cfg.ADV.DI.diversity_prob,dataset=dataset)
+
+    elif cfg.method == 'i-fgsm2':
+        import I_FGSM
+        attack_method = I_FGSM.I_FGSM(model=model, eps=cfg.ADV.eps, alpha=cfg.ADV.alpha, steps=cfg.ADV.iters,
+                                         decay=cfg.ADV.DI.decay, resize_rate=cfg.ADV.DI.resize_rate,
+                                         diversity_prob=cfg.ADV.DI.diversity_prob)
     #################################################################
     #                            Test                               #
     #################################################################

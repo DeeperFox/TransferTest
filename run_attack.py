@@ -15,7 +15,7 @@ from utils.get_attack import get_attack
 # 从'utils'中导入'get_attack'函数。
 from utils.get_dataset import get_dataset
 # 从'utils'中导入'get_dataset'函数。
-from model.get_models import get_models, get_teacher_model
+from model.get_models import get_models, get_teacher_model,get_model_feature_only
 # 从'model'中导入'get_models'和'get_teacher_model'函数。
 from utils.tools import parse_config_file, same_seeds, save_metrix
 # 从'utils/tools'中导入工具函数。
@@ -66,7 +66,6 @@ def main():
     # 获取数据集。
     models, metrix = get_models(configs, device=device)
     # 获取模型和评价指标。
-
     print(f'surrogate model: {configs.model}\tattack method: {configs.method}')
     # 打印使用的替代模型和攻击方法。
     attack_method = get_attack(configs, model=models[configs.model], device=device, dataset=test_set)

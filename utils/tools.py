@@ -65,6 +65,8 @@ def get_exp_name(attack_method, dataset, config):
         exp_name = f'MI-FGSM_i{config.ADV.iters}_m{config.ADV.MI.decay}'
     elif attack_method == 'di-fgsm':
         exp_name = f'DI-FGSM_i{config.ADV.iters}'
+    elif attack_method == 'i-fgsm2':
+        exp_name = f'I-FGSM_i{config.ADV.iters}'
     elif attack_method == 'ours':
         exp_name = f'OURS_i{config.ADV.iters}'
     elif attack_method == 'pi-fgsm':

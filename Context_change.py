@@ -8,11 +8,11 @@ from torchattacks.attack import Attack  # 导入对抗攻击库
 import os
 from torchvision import datasets, transforms
 from torchvision.utils import save_image  # 用于保存图像的函数
+import glob
+from PIL import Image
 
 class Context_change:
-    print('')
-
-    def __init__(self, model=None, method="CtxMaskSingleFill(0.0001)", prob=0.5, save_mask=False, dataset=None):
+    def __init__(self, model=None, method="CtxMaskSingleFill(0.9)", prob=0.5, save_mask=False, dataset=None):
         # 如果未提供模型，则使用预训练的ResNet18模型
         if model is None:
             self.model = timm.create_model("resnet18", pretrained=True)
@@ -25,28 +25,20 @@ class Context_change:
         self.masking = get_masking(method, model=self.model, save_mask=save_mask)  # 获取遮罩方法
         self.device = next(self.model.parameters()).device  # 获取模型所在的设备，例如GPU或CPU
         self.dataset = dataset  # 设置数据集
-        self.cam_masking = get_masking("CAMMasking", model=self.model)  # 获取CAM遮罩方法
+
+        # 加载背景图像文件夹中的所有图像
+        self.background_images = [Image.open(file).convert("RGB") for file in glob.glob('background_image/*.jpg')]
+        self.background_images = [TF.to_tensor(bg_image.resize((224, 224), Image.BILINEAR)).unsqueeze(0).to(self.device) for bg_image in self.background_images]
 
     def augment(self, images, labels=None):
         # 对输入图像进行数据增强
         images = images.to(self.device)  # 将图像移到设备上
         labels = labels.to(self.device)  # 将标签移到设备上
-        orig_mask = self.cam_masking(images, labels)  # 为原始图像生成CAM遮罩
-        random_idx = torch.randint(0, len(self.dataset), (1,))
-        fill_image, fill_label = self.dataset[random_idx.item()]  # 从数据集中随机获取一个填充图像和其标签
-        fill_image = fill_image.unsqueeze(0).to(self.device)  # 增加维度并移至设备上
-        fill_label = torch.tensor([fill_label], dtype=torch.long).to(self.device)  # 转换填充标签并移至设备上
-        fill_mask = self.cam_masking(fill_image, fill_label)  # 使用其自己的标签为填充图像生成CAM遮罩
-        # fill_mask=fill_mask.squeeze(1)
-        print(7,fill_mask.shape)
-        images = images * orig_mask  # 使用CAM遮罩保留原始图像中的主要主题
-        fill_image = fill_image * (~fill_mask)  # 反转填充遮罩以保留背景
-        print(8,images.shape)
-        print(9,fill_image.shape)
+        # orig_mask = self.cam_masking(images, labels)  # 为原始图像生成CAM遮罩
+        fill_image = self.background_images[torch.randint(0, len(self.background_images), (1,))]  # 从背景图像列表中随机选择一个图像
+        fill_image = fill_image.to(self.device)
+        # images = images * orig_mask  # 使用CAM遮罩保留原始图像中的主要主题
         augmented_images = self.masking(images, labels, fill_image)  # 应用遮罩方法
-        print(5,augmented_images.shape)
-        augmented_images = augmented_images.squeeze(1)
-        assert augmented_images.dim() == 4, f"Expected 4D tensor but got {augmented_images.dim()}D tensor."
         return augmented_images
 
     def save(self, path):
@@ -58,7 +50,7 @@ class Context_change:
         self.model.load_state_dict(torch.load(path))
 
 # # 加载数据集
-# data_path = 'Sub_imagenet'  # 数据集路径
+# data_path = 'data/Sub_imagenet'  # 数据集路径
 # dataset = datasets.ImageFolder(
 #     root=data_path,
 #     transform=transforms.Compose([
@@ -69,7 +61,7 @@ class Context_change:
 # loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)  # 创建数据加载器
 #
 # # 初始化模型和增强器
-# augmenter = Context_change(model=None, prob=0.5,dataset=dataset)
+# augmenter =  Context_change(model=None, prob=0.5,dataset=dataset)
 #
 # def adjust_augmented_shape(augmented_inputs):
 #     # 调整增强后输入的形状
@@ -94,3 +86,5 @@ class Context_change:
 #         save_image(aug_img, save_path)  # 保存图像
 #
 # print("增强的图片已保存至augmented_images文件夹。")  # 打印完成消息
+
+# python Context_change.py
