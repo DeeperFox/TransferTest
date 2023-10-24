@@ -1,25 +1,25 @@
-import torch  # 导入PyTorch库
-import torch.nn as nn  # 导入神经网络模块
-from attack.Attack_Base import Attack_Base  # 从attack模块导入Attack_Base基类
-from torch.nn import functional as F  # 导入PyTorch函数库
-import numpy as np  # 导入NumPy库
-from Context_change import Context_change  # 从Context_change模块导入Context_change类
+import torch
+import torch.nn as nn
+from attack.Attack_Base import Attack_Base
+from torch.nn import functional as F
+import numpy as np
+from Context_change import Context_change
 import os
 from torchvision.utils import save_image
 from datetime import datetime
 
 class CI_FGSM(Attack_Base):  # 定义DI_FGSM类并继承Attack_Base
     def __init__(self, dataset,model, eps=8/255, alpha=2/255, steps=10, max_value=1., min_value=0, resize_rate=0.9, decay=0.0,
-                 diversity_prob=0.5, random_start=False):  # 初始化方法
-        super().__init__(model=model, eps=eps, max_value=max_value, min_value=min_value)  # 调用父类的初始化方法
-        self.iters = steps  # 设置迭代次数
-        self.alpha = alpha  # 设置步长
-        self.decay = decay  # 设置动量衰减系数
-        self.resize_rate = resize_rate  # 设置图像缩放比例
-        self.diversity_prob = diversity_prob  # 设置输入多样性的概率
-        self.random_start = random_start  # 设置是否随机开始
+                 diversity_prob=0.5, random_start=False):
+        super().__init__(model=model, eps=eps, max_value=max_value, min_value=min_value)
+        self.iters = steps
+        self.alpha = alpha
+        self.decay = decay
+        self.resize_rate = resize_rate
+        self.diversity_prob = diversity_prob
+        self.random_start = random_start
         self.dataset = dataset
-        self.context_change = Context_change(model=model, prob=diversity_prob,dataset=self.dataset)  # 初始化Context_change类
+        self.context_change = Context_change(model=model, prob=diversity_prob,dataset=self.dataset)
 
 
     def attack(self,data, labels, idx=-1):  # 定义攻击方法
@@ -35,11 +35,14 @@ class CI_FGSM(Attack_Base):  # 定义DI_FGSM类并继承Attack_Base
             adv_images = adv_images + torch.empty_like(adv_images).uniform_(-self.eps, self.eps)  # 在原始数据基础上添加随机扰动
             adv_images = torch.clamp(adv_images, min=0, max=1).detach()  # 对扰动数据进行截断
 
-        for _ in range(self.iters):  # 迭代指定次数
-            adv_images.requires_grad = True  # 设置需要梯度
+        flag = True
+        cam0 = None
 
+        for _ in range(self.iters):  # 迭代指定次数
+            adv_images.requires_grad = True
             # print(3,adv_images.shape)
-            aug_img = self.context_change.augment(adv_images, labels)
+            aug_img, cam0 = self.context_change.augment(adv_images, labels, cam0, flag)
+            flag = False
             if not os.path.exists('mask_img'):
                 os.makedirs('mask_img')
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')

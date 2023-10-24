@@ -1,26 +1,25 @@
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
-# 将当前脚本所在的目录添加到系统路径。
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'model', 'classifiers')))
-# 将当前脚本所在目录下的'model/classifiers'添加到系统路径。
+
 
 import argparse
-# 导入argparse模块，用于解析命令行参数。
+
 import torch
-# 导入PyTorch深度学习库。
+
 from tqdm import tqdm
-# 导入tqdm，用于显示进度条。
+
 from utils.get_attack import get_attack
-# 从'utils'中导入'get_attack'函数。
+
 from utils.get_dataset import get_dataset
-# 从'utils'中导入'get_dataset'函数。
+
 from model.get_models import get_models, get_teacher_model,get_model_feature_only
-# 从'model'中导入'get_models'和'get_teacher_model'函数。
+
 from utils.tools import parse_config_file, same_seeds, save_metrix
-# 从'utils/tools'中导入工具函数。
+
 import warnings
-# 导入warnings模块。
+
 warnings.filterwarnings("ignore")
 # 抑制所有警告。
 

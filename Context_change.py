@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
-import timm  # 导入timm库，该库提供了大量预训练模型
-from masking import get_masking  # 导入获取遮罩的函数
+import timm
+from masking import get_masking
 import torchvision.transforms.functional as TF
 from torchvision.transforms import InterpolationMode
-from torchattacks.attack import Attack  # 导入对抗攻击库
+from torchattacks.attack import Attack
 import os
 from torchvision import datasets, transforms
-from torchvision.utils import save_image  # 用于保存图像的函数
+from torchvision.utils import save_image
 import glob
 from PIL import Image
 
@@ -18,28 +18,27 @@ class Context_change:
             self.model = timm.create_model("resnet18", pretrained=True)
         else:
             self.model = model
-        self.model.eval()  # 设置模型为评估模式，用于推断
-        self.method = method  # 设置数据增强方法
-        self.prob = prob  # 设置数据增强的概率
-        self.save_mask = save_mask  # 是否保存遮罩
-        self.masking = get_masking(method, model=self.model, save_mask=save_mask)  # 获取遮罩方法
-        self.device = next(self.model.parameters()).device  # 获取模型所在的设备，例如GPU或CPU
-        self.dataset = dataset  # 设置数据集
+        self.model.eval()
+        self.method = method
+        self.prob = prob
+        self.save_mask = save_mask
+        self.masking = get_masking(method, model=self.model, save_mask=save_mask)
+        self.device = next(self.model.parameters()).device
+        self.dataset = dataset
 
         # 加载背景图像文件夹中的所有图像
         self.background_images = [Image.open(file).convert("RGB") for file in glob.glob('background_image/*.jpg')]
         self.background_images = [TF.to_tensor(bg_image.resize((224, 224), Image.BILINEAR)).unsqueeze(0).to(self.device) for bg_image in self.background_images]
 
-    def augment(self, images, labels=None):
-        # 对输入图像进行数据增强
-        images = images.to(self.device)  # 将图像移到设备上
-        labels = labels.to(self.device)  # 将标签移到设备上
+    def augment(self, images, labels, cam0, flag):
+        images = images.to(self.device)
+        labels = labels.to(self.device)  
         # orig_mask = self.cam_masking(images, labels)  # 为原始图像生成CAM遮罩
         fill_image = self.background_images[torch.randint(0, len(self.background_images), (1,))]  # 从背景图像列表中随机选择一个图像
         fill_image = fill_image.to(self.device)
         # images = images * orig_mask  # 使用CAM遮罩保留原始图像中的主要主题
-        augmented_images = self.masking(images, labels, fill_image)  # 应用遮罩方法
-        return augmented_images
+        augmented_images, cam = self.masking(images, labels, cam0, flag, fill_image)  # 应用遮罩方法
+        return augmented_images, cam
 
     def save(self, path):
         # 保存模型的权重

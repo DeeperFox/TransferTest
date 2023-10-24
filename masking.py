@@ -81,20 +81,23 @@ class CAMMaskSingleFill(Attack):  # 定义 CAMMaskSingleFill 类，继承 Attack
         self.save_mask = save_mask  # 设置保存遮罩标志
         self.uses_fill = True
 
-    def forward(self, images, labels, fill_image=None):  # 定义前向传播方法
+    def forward(self, images, labels, cam0, flag, fill_image=None):  # 定义前向传播方法
         images = images.clone().detach().to(self.device)  # 克隆并转移图像到设备
         labels = labels.clone().detach().to(self.device)  # 克隆并转移标签到设备
-        cam = self.get_CAM(self.model, images, labels)  # 获取 CAM
-        if self.save_mask:  # 如果需要保存遮罩
-            cam, patch_cam = cam  # 分解返回的 CAM 和 patch_cam
-            patch_cam = patch_cam / (patch_cam.amax(dim=1, keepdim=True) + 1e-8)  # 标准化 patch_cam
-            patch_mask = (patch_cam > self.threshold)  # 创建 patch 遮罩
-        cam = cam / (cam.amax(dim=(1, 2), keepdim=True) + 1e-8)  # 标准化 CAM
+        if flag:
+            cam = self.get_CAM(self.model, images, labels)  # 获取 CAM
+            # if self.save_mask:  # 如果需要保存遮罩
+            #     cam, patch_cam = cam  # 分解返回的 CAM 和 patch_cam
+            #     patch_cam = patch_cam / (patch_cam.amax(dim=1, keepdim=True) + 1e-8)  # 标准化 patch_cam
+            #     patch_mask = (patch_cam > self.threshold)  # 创建 patch 遮罩
+            cam = cam / (cam.amax(dim=(1, 2), keepdim=True) + 1e-8)  # 标准化 CAM
+        else:
+            cam = cam0
         mask = (cam > self.threshold).unsqueeze(1)  # 创建 CAM 遮罩
         if self.ctx_mask:  # 如果使用上下文遮罩
             mask = ~mask  # 反转遮罩
-            if self.save_mask:  # 如果需要保存遮罩
-                patch_mask = ~patch_mask  # 反转 patch 遮罩
+            # if self.save_mask:  # 如果需要保存遮罩
+            #     patch_mask = ~patch_mask  # 反转 patch 遮罩
         idx = torch.randperm(images.size()[0], device=self.device)  # 随机排列索引
         if fill_image is not None:
             # print("images shape:", images.shape)
@@ -104,9 +107,9 @@ class CAMMaskSingleFill(Attack):  # 定义 CAMMaskSingleFill 类，继承 Attack
         else:
             idx = torch.randperm(images.size()[0], device=self.device)  # 保留原来的代码，以防没有提供填充图片
             images_masked = images * (~mask) + images[idx] * (mask)
-        if self.save_mask:  # 如果需要保存遮罩
-            return images_masked, patch_mask  # 返回遮罩后的图像和 patch 遮罩
-        return images_masked  # 返回遮罩后的图像
+        # if self.save_mask:  # 如果需要保存遮罩
+        #     return images_masked, patch_mask  # 返回遮罩后的图像和 patch 遮罩
+        return images_masked,cam  # 返回遮罩后的图像
 
 
 def get_masking(name: str = None, **kwargs):
