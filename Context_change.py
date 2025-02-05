@@ -12,7 +12,7 @@ import glob
 from PIL import Image
 
 class Context_change:
-    def __init__(self, model=None, method="CtxMaskSingleFill(0.9)", prob=0.5, save_mask=False, dataset=None):
+    def __init__(self, model=None, method="CtxMaskSingleFill(0.1)", prob=0.5, save_mask=False, dataset=None):
         # 如果未提供模型，则使用预训练的ResNet18模型
         if model is None:
             self.model = timm.create_model("resnet18", pretrained=True)
